@@ -35,7 +35,7 @@ namespace Freude
             IFreudeTextParser freudeTextParser = new FreudeTextParser (wikiTextTokenizer);
             IProjectBuilder projectBuilder = new ProjectBuilder (fileSystem);
 
-            ConsoleShell consoleShell = new ConsoleShell ("ScalableMaps.Mapmaker.exe");
+            ConsoleShell consoleShell = new ConsoleShell ("Freude.Engine.exe");
             consoleShell.RegisterCommand (new BuildCommand (fileSystem, projectBuilder, freudeTextParser, freudeTemplatingEngine));
             consoleShell.RegisterCommand (new DeployCommand(projectBuilder, ftpSessionFactory));
 
