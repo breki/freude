@@ -1,7 +1,4 @@
 ﻿using System;
-using Brejc.Common.Console;
-using Brejc.Common.Ftp;
-using Freude.Commands;
 using Freude.ProjectServices;
 using NUnit.Framework;
 using Rhino.Mocks;
