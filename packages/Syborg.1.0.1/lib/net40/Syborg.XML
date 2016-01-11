@@ -1,0 +1,975 @@
+﻿<?xml version="1.0"?>
+<doc>
+  <assembly>
+    <name>Syborg</name>
+  </assembly>
+  <members>
+    <member name="T:Syborg.Caching.CachingByETagPolicy">
+      <summary>
+            Caching policy that uses ETag request header to determine whether the cached resource is stale.
+            </summary>
+    </member>
+    <member name="T:Syborg.Caching.ICachingPolicy">
+      <summary>
+            Interface for implementing various types of web request caching policies.
+            Caching policy determines when to return a fresh version of a resource.
+            </summary>
+    </member>
+    <member name="M:Syborg.Caching.ICachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})">
+      <summary>
+            Processes the web request according to the caching policy. 
+            </summary>
+      <remarks>Depending on the policy itself, if the resource is not yet cached or the cache is stale,
+            the method should call <see cref="!:returnResourceAction" /> method to return the new resource value. 
+            Otherwise, the method should return appropriate HTTP headers in the web response.</remarks>
+      <param name="resourceData">Resource data to return in case the resource is not yet cached or the cache is stale
+            (in which case the resourceData value will be used to call <see cref="!:returnResourceAction" /> method.
+            Can be <c>null</c> if <see cref="!:returnResourceAction" /> method is designed to calculate the new resource value
+            itself.</param>
+      <param name="context">Web context</param>
+      <param name="returnResourceAction">The method to be called in case the resource is not yet cached 
+            or the cache is stale. Typically this method fills the web response object with all the resource data needed.</param>
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires csharp="returnResourceAction != null" vb="returnResourceAction &lt;&gt; Nothing">returnResourceAction != null</requires>
+    </member>
+    <member name="M:Syborg.Caching.CachingByETagPolicy.#ctor(System.TimeSpan,System.Func{System.Tuple{System.String,System.Nullable{System.DateTime}}})">
+      <summary>
+            Initializes a new instance of the <see cref="T:Syborg.Caching.CachingByETagPolicy" /> class using the specified maxAge value
+            and the function to return ETag value and the lastModified DateTime of the resource.
+            </summary>
+      <param name="maxAge">The value to be used for the Cache-Control max-age HTTP response header</param>
+      <param name="etagFunc">The function that returns the ETag and Last-Modified HTTP response header values</param>
+      <requires csharp="etagFunc != null" vb="etagFunc &lt;&gt; Nothing">etagFunc != null</requires>
+    </member>
+    <member name="T:Syborg.Commands.IContentRepository">
+      <summary>
+            Provides methods to access the content files.
+            </summary>
+    </member>
+    <member name="M:Syborg.Commands.IContentRepository.DoesFileExist(System.String)">
+      <summary>
+            Checks whether the specified content file exists on the disk.
+            </summary>
+      <param name="contentFilePath">The path of the content file.</param>
+      <returns>
+        <c>true</c> if the file exists; <c>false</c> otherwise</returns>
+    </member>
+    <member name="M:Syborg.IWebContext.AddHeader(System.String,System.String)">
+      <summary>
+            Adds a HTTP header to the response.
+            </summary>
+      <param name="name">Header name</param>
+      <param name="value">Header value</param>
+      <requires csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="P:Syborg.IWebContext.ApplicationPath">
+      <summary>
+            Gets the Web application's root path on the server.
+            </summary>
+      <example>For example, if the complete <see cref="P:Syborg.IWebContext.Url" /> is 'http://localhost/azurite/map/maribor',
+            then the <see cref="P:Syborg.IWebContext.ApplicationPath" /> will be '/Azurite'.</example>
+    </member>
+    <member name="P:Syborg.IWebContext.ApplicationUrl">
+      <summary>
+            Gets the full URL of the Web application's root path on the server.
+            </summary>
+      <example>For example, if the complete <see cref="P:Syborg.IWebContext.Url" /> is 'http://localhost/azurite/map/maribor',
+            then the <see cref="P:Syborg.IWebContext.ApplicationUrl" /> will be 'http://localhost/Azurite'.</example>
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.RawUrl">
+      <summary>
+            Gets the raw (relative) URL of the request.
+            </summary>
+      <example>For example, if the complete <see cref="P:Syborg.IWebContext.Url" /> is 'http://localhost/azurite/map/maribor',
+            then the <see cref="P:Syborg.IWebContext.RawUrl" /> will be '/azurite/map/maribor'.</example>
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.Url">
+      <summary>
+            Gets the complete URL of the request.
+            </summary>
+      <seealso cref="P:Syborg.IWebContext.ApplicationUrl" />
+      <seealso cref="P:Syborg.IWebContext.RawUrl" />
+      <getter>
+        <ensures csharp="result != (System.Uri)null" vb="result &lt;&gt; ((System.Uri)Nothing) ">result != (System.Uri)null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebServerConfiguration.WebServerDevelopmentRootDir">
+      <summary>
+            Gets the root directory containing web server assets.
+            <remarks>This property is only relevant when <see cref="P:Syborg.IWebServerConfiguration.WebServerDevelopmentMode" />
+            is switched on. It allows the changes of various files to reflect in the web application without the need for recompilation.
+            </remarks></summary>
+    </member>
+    <member name="M:Syborg.Razor.HelperResult.#ctor(System.Action{System.IO.TextWriter})">
+      <summary>
+            Initializes a new instance of the <see cref="T:Syborg.Razor.HelperResult" /> class. 
+            </summary>
+      <param name="writerAction">
+            The writer Action.
+            </param>
+    </member>
+    <member name="M:Syborg.Razor.HelperResult.ToHtmlString">
+      <summary>
+            This type/member supports the .NET Framework infrastructure and is not intended to be used directly from your code.
+            </summary>
+      <returns>
+            The <see cref="T:System.String" />.
+            </returns>
+    </member>
+    <member name="M:Syborg.Razor.HelperResult.ToString">
+      <summary>
+            This type/member supports the .NET Framework infrastructure and is not intended to be used directly from your code.
+            </summary>
+      <returns>
+            The <see cref="T:System.String" />.
+            </returns>
+      <ensures inheritedFrom="M:System.Object.ToString" inheritedFromTypeName="Object" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.HelperResult.WriteTo(System.IO.TextWriter)">
+      <summary>
+            This type/member supports the .NET Framework infrastructure and is not intended to be used directly from your code.
+            </summary>
+      <param name="writer">
+            The writer.
+            </param>
+    </member>
+    <member name="T:Syborg.Razor.IRazorViewRenderingEngine">
+      <summary>
+            Engine for rendering views using Razor templating language, with layout support.
+            </summary>
+    </member>
+    <member name="M:Syborg.Razor.RazorTemplateBase.WriteTo(System.IO.TextWriter,System.Object)">
+      <summary>
+            Writes the specified object as an HTML-encoded string to the specified text writer.
+            </summary>
+      <param name="writer">The text writer.</param>
+      <param name="content">The object to encode and write.</param>
+      <requires csharp="writer != null" vb="writer &lt;&gt; Nothing">writer != null</requires>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.Add(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Add(Syborg.ICookie)" inheritedFromTypeName="ICookiesCollection" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.Get(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.Get(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.Get(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Get(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.GetKey(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.GetKey(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.Remove(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Remove(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.Set(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Set(Syborg.ICookie)" inheritedFromTypeName="ICookiesCollection" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.Syborg#ICookiesCollection#get_Item(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.FakeCookiesCollection.Syborg#ICookiesCollection#get_Item(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="P:Syborg.FakeCookiesCollection.Syborg#ICookiesCollection#Item(System.Int32)">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeCookiesCollection.Syborg#ICookiesCollection#Item(System.String)">
+      <getter>
+        <requires inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+      </getter>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.Add(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Add(Syborg.ICookie)" inheritedFromTypeName="ICookiesCollection" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.Get(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.Get(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.Get(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Get(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.GetKey(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.GetKey(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.Remove(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Remove(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.Set(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Set(Syborg.ICookie)" inheritedFromTypeName="ICookiesCollection" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.Syborg#ICookiesCollection#get_Item(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.HttpListenerCookiesCollection.Syborg#ICookiesCollection#get_Item(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="P:Syborg.HttpListenerCookiesCollection.Syborg#ICookiesCollection#Item(System.Int32)">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerCookiesCollection.Syborg#ICookiesCollection#Item(System.String)">
+      <getter>
+        <requires inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+      </getter>
+    </member>
+    <member name="M:Syborg.IWebContext.AddPolicy(Syborg.IWebPolicy)">
+      <requires csharp="policy != null" vb="policy &lt;&gt; Nothing">policy != null</requires>
+    </member>
+    <member name="M:Syborg.IWebContext.AppendCookie(Syborg.ICookie)">
+      <requires csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.IWebContext.CreateCookie(System.String)">
+      <requires csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.IWebContext.SetCookie(Syborg.ICookie)">
+      <requires csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="P:Syborg.IWebContext.Configuration">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.FileMimeTypesMap">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.FileSystem">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.HttpMethod">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.Policies">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.QueryString">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.RequestCookies">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.RequestHeaders">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.RequestStream">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.ResponseHeaders">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.ResponseStream">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.TimeService">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.IWebContext.ViewRenderingEngine">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="M:Syborg.FakeWebContext.AddHeader(System.String,System.String)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AddHeader(System.String,System.String)" inheritedFromTypeName="IWebContext" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.FakeWebContext.AddPolicy(Syborg.IWebPolicy)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AddPolicy(Syborg.IWebPolicy)" inheritedFromTypeName="IWebContext" csharp="policy != null" vb="policy &lt;&gt; Nothing">policy != null</requires>
+    </member>
+    <member name="M:Syborg.FakeWebContext.AppendCookie(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AppendCookie(Syborg.ICookie)" inheritedFromTypeName="IWebContext" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.FakeWebContext.CreateCookie(System.String)">
+      <requires inheritedFrom="M:Syborg.IWebContext.CreateCookie(System.String)" inheritedFromTypeName="IWebContext" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.FakeWebContext.SetCookie(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.IWebContext.SetCookie(Syborg.ICookie)" inheritedFromTypeName="IWebContext" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.FakeWebContext.EncodeFormDataToRequest(System.Collections.Specialized.NameValueCollection)">
+      <requires csharp="new Syborg.FakeWebContext.&lt;&gt;c__DisplayClass3(){&#xD;&#xA;    formData = formData, &#xD;&#xA;}.formData != null" vb="(() =&gt; {&#xD;&#xA;    Syborg.FakeWebContext.&lt;&gt;c__DisplayClass3 local_3_prime = New Syborg.FakeWebContext.&lt;&gt;c__DisplayClass3();&#xD;&#xA;    (local_3_prime.formData = formData)&#xD;&#xA;    return local_3_prime; })().formData &lt;&gt; Nothing">new Syborg.FakeWebContext.&lt;&gt;c__DisplayClass3(){
+    formData = formData, 
+}.formData != null</requires>
+    </member>
+    <member name="M:Syborg.FakeWebContext.SetRequestBody(System.String)">
+      <requires csharp="body != null" vb="body &lt;&gt; Nothing">body != null</requires>
+    </member>
+    <member name="P:Syborg.FakeWebContext.ApplicationUrl">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ApplicationUrl" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.Configuration">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Configuration" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.FileMimeTypesMap">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_FileMimeTypesMap" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.FileSystem">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_FileSystem" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.TimeService">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_TimeService" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.HttpMethod">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_HttpMethod" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.Policies">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Policies" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.ResponseStream">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ResponseStream" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.QueryString">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_QueryString" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.RawUrl">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RawUrl" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.RequestCookies">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestCookies" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.RequestHeaders">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestHeaders" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.RequestStream">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestStream" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.ResponseHeaders">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ResponseHeaders" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.Url">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Url" inheritedFromTypeName="IWebContext" csharp="result != (System.Uri)null" vb="result &lt;&gt; ((System.Uri)Nothing) ">result != (System.Uri)null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.FakeWebContext.ViewRenderingEngine">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ViewRenderingEngine" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.Add(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Add(Syborg.ICookie)" inheritedFromTypeName="ICookiesCollection" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.Get(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.Get(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.Get(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Get(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.GetKey(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.GetKey(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.Remove(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Remove(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.Set(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.Set(Syborg.ICookie)" inheritedFromTypeName="ICookiesCollection" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.Syborg#ICookiesCollection#get_Item(System.Int32)">
+      <ensures inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.HttpModuleCookiesCollection.Syborg#ICookiesCollection#get_Item(System.String)">
+      <requires inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="P:Syborg.HttpModuleCookiesCollection.Syborg#ICookiesCollection#Item(System.Int32)">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.Int32)" inheritedFromTypeName="ICookiesCollection" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleCookiesCollection.Syborg#ICookiesCollection#Item(System.String)">
+      <getter>
+        <requires inheritedFrom="M:Syborg.ICookiesCollection.get_Item(System.String)" inheritedFromTypeName="ICookiesCollection" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+      </getter>
+    </member>
+    <member name="M:Syborg.ICookiesCollection.Add(Syborg.ICookie)">
+      <requires csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.ICookiesCollection.Get(System.Int32)">
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.ICookiesCollection.Get(System.String)">
+      <requires csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.ICookiesCollection.GetKey(System.Int32)">
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.ICookiesCollection.Remove(System.String)">
+      <requires csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.ICookiesCollection.Set(Syborg.ICookie)">
+      <requires csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="P:Syborg.ICookiesCollection.Item(System.Int32)">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.ICookiesCollection.Item(System.String)">
+      <getter>
+        <requires csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+      </getter>
+    </member>
+    <member name="M:Syborg.Policies.ValidateETagPolicy.Apply(Syborg.IWebContext)">
+      <requires inheritedFrom="M:Syborg.IWebPolicy.Apply(Syborg.IWebContext)" inheritedFromTypeName="IWebPolicy" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.Policies.HstsPolicy.Apply(Syborg.IWebContext)">
+      <requires inheritedFrom="M:Syborg.IWebPolicy.Apply(Syborg.IWebContext)" inheritedFromTypeName="IWebPolicy" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="P:Syborg.FakeCookie.Name">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.ICookie.get_Name" inheritedFromTypeName="ICookie" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+      <setter>
+        <requires inheritedFrom="M:Syborg.ICookie.set_Name(System.String)" inheritedFromTypeName="ICookie" csharp="value != null" vb="value &lt;&gt; Nothing">value != null</requires>
+      </setter>
+    </member>
+    <member name="M:Syborg.Commands.FaviconCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)">
+      <requires inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="routeMatch != null" vb="routeMatch &lt;&gt; Nothing">routeMatch != null</requires>
+      <ensures inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Commands.RobotsTxtCommand.#ctor(System.Collections.Generic.IEnumerable{System.String},System.String)">
+      <requires csharp="disallows != null" vb="disallows &lt;&gt; Nothing">disallows != null</requires>
+    </member>
+    <member name="M:Syborg.Commands.RobotsTxtCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)">
+      <requires inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="routeMatch != null" vb="routeMatch &lt;&gt; Nothing">routeMatch != null</requires>
+      <ensures inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Commands.ContentCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)">
+      <requires inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="routeMatch != null" vb="routeMatch &lt;&gt; Nothing">routeMatch != null</requires>
+      <ensures inheritedFrom="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)" inheritedFromTypeName="IWebCommand" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Commands.ContentCommand.CacheWithMaxAge(System.String,System.TimeSpan)">
+      <requires csharp="pattern != null" vb="pattern &lt;&gt; Nothing">pattern != null</requires>
+    </member>
+    <member name="M:Syborg.Commands.ContentCommand.FileLastModifiedFunc(System.Object)">
+      <requires csharp="fileNameObj != null" vb="fileNameObj &lt;&gt; Nothing">fileNameObj != null</requires>
+    </member>
+    <member name="M:Syborg.Commands.ContentCommand.FindCachingPolicyForFile(System.String)">
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Commands.ContentCommand.CachingRule.#ctor(System.String,System.TimeSpan,System.Func{System.Object,System.Nullable{System.DateTime}})">
+      <requires csharp="pattern != null" vb="pattern &lt;&gt; Nothing">pattern != null</requires>
+    </member>
+    <member name="M:Syborg.IWebCommand.Execute(Syborg.IWebContext,Syborg.Routing.WebRequestRouteMatch)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires csharp="routeMatch != null" vb="routeMatch &lt;&gt; Nothing">routeMatch != null</requires>
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="P:Syborg.HttpModuleCookie.Name">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.ICookie.get_Name" inheritedFromTypeName="ICookie" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+      <setter>
+        <requires inheritedFrom="M:Syborg.ICookie.set_Name(System.String)" inheritedFromTypeName="ICookie" csharp="value != null" vb="value &lt;&gt; Nothing">value != null</requires>
+      </setter>
+    </member>
+    <member name="M:Syborg.CommandResults.BinaryDataResult.#ctor(System.Byte[],Syborg.Caching.ICachingPolicy)">
+      <requires csharp="data != null" vb="data &lt;&gt; Nothing">data != null</requires>
+      <requires csharp="cachingPolicy != null" vb="cachingPolicy &lt;&gt; Nothing">cachingPolicy != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.WebCommandResultBase.Apply(Syborg.IWebContext)">
+      <requires inheritedFrom="M:Syborg.CommandResults.IWebCommandResult.Apply(Syborg.IWebContext)" inheritedFromTypeName="IWebCommandResult" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.WebCommandResultBase.VerifyCaching(Syborg.IWebContext)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.IWebCommandResult.Apply(Syborg.IWebContext)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.FileResult.#ctor(System.String,Syborg.Caching.ICachingPolicy)">
+      <requires csharp="fileName != null" vb="fileName &lt;&gt; Nothing">fileName != null</requires>
+      <requires csharp="cachingPolicy != null" vb="cachingPolicy &lt;&gt; Nothing">cachingPolicy != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.FileResult.ReturnFile(System.Object,Syborg.IWebContext)">
+      <requires csharp="fileNameObj != null" vb="fileNameObj &lt;&gt; Nothing">fileNameObj != null</requires>
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="P:Syborg.CommandResults.FileResult.FileName">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.CommandResults.FileResult.CachingPolicy">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="T:Syborg.CommandResults.ViewResult`1">
+      <invariant>model != null</invariant>
+    </member>
+    <member name="M:Syborg.CommandResults.ViewResult`1.#ctor(`0,Syborg.Razor.RazorEngineExecutionSettings)">
+      <requires csharp="(object)model != null" vb="((Object)model) &lt;&gt; Nothing">(object)model != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.ViewResult`1.#ctor(System.String,`0,Syborg.Razor.RazorEngineExecutionSettings)">
+      <requires csharp="(object)model != null" vb="((Object)model) &lt;&gt; Nothing">(object)model != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.ViewResult`1.SetRazorEngineExecutionSettings(Syborg.Razor.RazorEngineExecutionSettings)">
+      <requires csharp="settings != null" vb="settings &lt;&gt; Nothing">settings != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.ViewResult`1.#ctor(`0)">
+      <requires csharp="(object)model != null" vb="((Object)model) &lt;&gt; Nothing">(object)model != null</requires>
+    </member>
+    <member name="P:Syborg.CommandResults.ViewResult`1.Model">
+      <getter>
+        <ensures csharp="(object)result != null" vb="((Object)result) &lt;&gt; Nothing">(object)result != null</ensures>
+      </getter>
+    </member>
+    <member name="M:Syborg.CommandResults.TextResult.#ctor(System.String)">
+      <requires csharp="text != null" vb="text &lt;&gt; Nothing">text != null</requires>
+    </member>
+    <member name="M:Syborg.CommandResults.TextResult.#ctor(System.String,System.Net.HttpStatusCode)">
+      <requires csharp="text != null" vb="text &lt;&gt; Nothing">text != null</requires>
+    </member>
+    <member name="P:Syborg.CommandResults.TextResult.Text">
+      <setter>
+        <requires csharp="value != null" vb="value &lt;&gt; Nothing">value != null</requires>
+      </setter>
+    </member>
+    <member name="M:Syborg.IFileMimeTypesMap.RegisterMimeType(System.String,System.String)">
+      <requires csharp="fileExtension != null" vb="fileExtension &lt;&gt; Nothing">fileExtension != null</requires>
+      <requires csharp="mimeType != null" vb="mimeType &lt;&gt; Nothing">mimeType != null</requires>
+    </member>
+    <member name="M:Syborg.IFileMimeTypesMap.GetContentType(System.String)">
+      <requires csharp="fileName != null" vb="fileName &lt;&gt; Nothing">fileName != null</requires>
+    </member>
+    <member name="M:Syborg.Caching.CachingByMaxAgePolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})">
+      <requires inheritedFrom="M:Syborg.Caching.ICachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})" inheritedFromTypeName="ICachingPolicy" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires inheritedFrom="M:Syborg.Caching.ICachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})" inheritedFromTypeName="ICachingPolicy" csharp="returnResourceAction != null" vb="returnResourceAction &lt;&gt; Nothing">returnResourceAction != null</requires>
+    </member>
+    <member name="M:Syborg.Caching.CachingByETagPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})">
+      <requires inheritedFrom="M:Syborg.Caching.ICachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})" inheritedFromTypeName="ICachingPolicy" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires inheritedFrom="M:Syborg.Caching.ICachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})" inheritedFromTypeName="ICachingPolicy" csharp="returnResourceAction != null" vb="returnResourceAction &lt;&gt; Nothing">returnResourceAction != null</requires>
+    </member>
+    <member name="M:Syborg.Caching.NoCachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})">
+      <requires inheritedFrom="M:Syborg.Caching.ICachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})" inheritedFromTypeName="ICachingPolicy" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <requires inheritedFrom="M:Syborg.Caching.ICachingPolicy.ProcessRequest(System.Object,Syborg.IWebContext,System.Action{System.Object,Syborg.IWebContext})" inheritedFromTypeName="ICachingPolicy" csharp="returnResourceAction != null" vb="returnResourceAction &lt;&gt; Nothing">returnResourceAction != null</requires>
+    </member>
+    <member name="P:Syborg.ICookie.Name">
+      <getter>
+        <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+      <setter>
+        <requires csharp="value != null" vb="value &lt;&gt; Nothing">value != null</requires>
+      </setter>
+    </member>
+    <member name="M:Syborg.FileMimeTypesMap.RegisterMimeType(System.String,System.String)">
+      <requires inheritedFrom="M:Syborg.IFileMimeTypesMap.RegisterMimeType(System.String,System.String)" inheritedFromTypeName="IFileMimeTypesMap" csharp="fileExtension != null" vb="fileExtension &lt;&gt; Nothing">fileExtension != null</requires>
+      <requires inheritedFrom="M:Syborg.IFileMimeTypesMap.RegisterMimeType(System.String,System.String)" inheritedFromTypeName="IFileMimeTypesMap" csharp="mimeType != null" vb="mimeType &lt;&gt; Nothing">mimeType != null</requires>
+    </member>
+    <member name="M:Syborg.FileMimeTypesMap.GetContentType(System.String)">
+      <requires inheritedFrom="M:Syborg.IFileMimeTypesMap.GetContentType(System.String)" inheritedFromTypeName="IFileMimeTypesMap" csharp="fileName != null" vb="fileName &lt;&gt; Nothing">fileName != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.IRazorViewRenderingEngine.Initialize(System.String,Syborg.Razor.RazorEngineCompileSettings)">
+      <requires csharp="viewsRootDirectory != null" vb="viewsRootDirectory &lt;&gt; Nothing">viewsRootDirectory != null</requires>
+      <requires csharp="settings != null" vb="settings &lt;&gt; Nothing">settings != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.IRazorViewRenderingEngine.RegisterLayout(System.String)">
+      <requires csharp="layoutName != null" vb="layoutName &lt;&gt; Nothing">layoutName != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.IRazorViewRenderingEngine.RegisterView(System.String,System.String,System.String)">
+      <requires csharp="viewName != null" vb="viewName &lt;&gt; Nothing">viewName != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.IRazorViewRenderingEngine.GetViewTemplateByModel``1">
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.IRazorViewRenderingEngine.GetViewTemplateByName(System.String)">
+      <requires csharp="viewName != null" vb="viewName &lt;&gt; Nothing">viewName != null</requires>
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.InMemoryRazorCompiler.Compile(System.String,Syborg.Razor.RazorEngineCompileSettings,System.String)">
+      <requires inheritedFrom="M:Syborg.Razor.IRazorCompiler.Compile(System.String,Syborg.Razor.RazorEngineCompileSettings,System.String)" inheritedFromTypeName="IRazorCompiler" csharp="razorTemplateText != null" vb="razorTemplateText &lt;&gt; Nothing">razorTemplateText != null</requires>
+      <requires inheritedFrom="M:Syborg.Razor.IRazorCompiler.Compile(System.String,Syborg.Razor.RazorEngineCompileSettings,System.String)" inheritedFromTypeName="IRazorCompiler" csharp="settings != null" vb="settings &lt;&gt; Nothing">settings != null</requires>
+      <ensures inheritedFrom="M:Syborg.Razor.IRazorCompiler.Compile(System.String,Syborg.Razor.RazorEngineCompileSettings,System.String)" inheritedFromTypeName="IRazorCompiler" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.IRazorCompiler.Compile(System.String,Syborg.Razor.RazorEngineCompileSettings,System.String)">
+      <requires csharp="razorTemplateText != null" vb="razorTemplateText &lt;&gt; Nothing">razorTemplateText != null</requires>
+      <requires csharp="settings != null" vb="settings &lt;&gt; Nothing">settings != null</requires>
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.CompiledRazorTemplate.Execute(Syborg.Razor.RazorEngineExecutionSettings)">
+      <requires inheritedFrom="M:Syborg.Razor.ICompiledRazorTemplate.Execute(Syborg.Razor.RazorEngineExecutionSettings)" inheritedFromTypeName="ICompiledRazorTemplate" csharp="executionSettings != null" vb="executionSettings &lt;&gt; Nothing">executionSettings != null</requires>
+      <ensures inheritedFrom="M:Syborg.Razor.ICompiledRazorTemplate.Execute(Syborg.Razor.RazorEngineExecutionSettings)" inheritedFromTypeName="ICompiledRazorTemplate" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.CompiledRazorTemplate.ExecuteWithLayout(Syborg.Razor.ICompiledRazorTemplate,Syborg.Razor.RazorEngineExecutionSettings)">
+      <requires inheritedFrom="M:Syborg.Razor.ICompiledRazorTemplate.ExecuteWithLayout(Syborg.Razor.ICompiledRazorTemplate,Syborg.Razor.RazorEngineExecutionSettings)" inheritedFromTypeName="ICompiledRazorTemplate" csharp="innerTemplate != null" vb="innerTemplate &lt;&gt; Nothing">innerTemplate != null</requires>
+      <requires inheritedFrom="M:Syborg.Razor.ICompiledRazorTemplate.ExecuteWithLayout(Syborg.Razor.ICompiledRazorTemplate,Syborg.Razor.RazorEngineExecutionSettings)" inheritedFromTypeName="ICompiledRazorTemplate" csharp="executionSettings != null" vb="executionSettings &lt;&gt; Nothing">executionSettings != null</requires>
+      <ensures inheritedFrom="M:Syborg.Razor.ICompiledRazorTemplate.ExecuteWithLayout(Syborg.Razor.ICompiledRazorTemplate,Syborg.Razor.RazorEngineExecutionSettings)" inheritedFromTypeName="ICompiledRazorTemplate" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.CompiledRazorTemplate.CreateTemplateInstance">
+      <ensures inheritedFrom="M:Syborg.Razor.ICompiledRazorTemplate.CreateTemplateInstance" inheritedFromTypeName="ICompiledRazorTemplate" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.UrlHelper.#ctor(System.String)">
+      <requires csharp="applicationUrl != null" vb="applicationUrl &lt;&gt; Nothing">applicationUrl != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.UrlHelper.Base">
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.UrlHelper.AbsoluteBase">
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="P:Syborg.Razor.RazorException.Message">
+      <getter>
+        <ensures inheritedFrom="M:System.Exception.get_Message" inheritedFromTypeName="Exception" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="M:Syborg.Razor.RazorViewRenderingEngine.#ctor(LibroLib.FileSystem.IFileSystem,Syborg.Razor.IRazorCompiler)">
+      <requires csharp="fileSystem != null" vb="fileSystem &lt;&gt; Nothing">fileSystem != null</requires>
+      <requires csharp="razorCompiler != null" vb="razorCompiler &lt;&gt; Nothing">razorCompiler != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.RazorViewRenderingEngine.Initialize(System.String,Syborg.Razor.RazorEngineCompileSettings)">
+      <requires inheritedFrom="M:Syborg.Razor.IRazorViewRenderingEngine.Initialize(System.String,Syborg.Razor.RazorEngineCompileSettings)" inheritedFromTypeName="IRazorViewRenderingEngine" csharp="viewsRootDirectory != null" vb="viewsRootDirectory &lt;&gt; Nothing">viewsRootDirectory != null</requires>
+      <requires inheritedFrom="M:Syborg.Razor.IRazorViewRenderingEngine.Initialize(System.String,Syborg.Razor.RazorEngineCompileSettings)" inheritedFromTypeName="IRazorViewRenderingEngine" csharp="settings != null" vb="settings &lt;&gt; Nothing">settings != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.RazorViewRenderingEngine.RegisterLayout(System.String)">
+      <requires inheritedFrom="M:Syborg.Razor.IRazorViewRenderingEngine.RegisterLayout(System.String)" inheritedFromTypeName="IRazorViewRenderingEngine" csharp="layoutName != null" vb="layoutName &lt;&gt; Nothing">layoutName != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.RazorViewRenderingEngine.RegisterView(System.String,System.String,System.String)">
+      <requires inheritedFrom="M:Syborg.Razor.IRazorViewRenderingEngine.RegisterView(System.String,System.String,System.String)" inheritedFromTypeName="IRazorViewRenderingEngine" csharp="viewName != null" vb="viewName &lt;&gt; Nothing">viewName != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.RazorViewRenderingEngine.GetViewTemplateByModel``1">
+      <ensures inheritedFrom="M:Syborg.Razor.IRazorViewRenderingEngine.GetViewTemplateByModel``1" inheritedFromTypeName="IRazorViewRenderingEngine" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.RazorViewRenderingEngine.GetViewTemplateByName(System.String)">
+      <requires inheritedFrom="M:Syborg.Razor.IRazorViewRenderingEngine.GetViewTemplateByName(System.String)" inheritedFromTypeName="IRazorViewRenderingEngine" csharp="viewName != null" vb="viewName &lt;&gt; Nothing">viewName != null</requires>
+      <ensures inheritedFrom="M:Syborg.Razor.IRazorViewRenderingEngine.GetViewTemplateByName(System.String)" inheritedFromTypeName="IRazorViewRenderingEngine" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.ICompiledRazorTemplate.CreateTemplateInstance">
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.ICompiledRazorTemplate.Execute(Syborg.Razor.RazorEngineExecutionSettings)">
+      <requires csharp="executionSettings != null" vb="executionSettings &lt;&gt; Nothing">executionSettings != null</requires>
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.ICompiledRazorTemplate.ExecuteWithLayout(Syborg.Razor.ICompiledRazorTemplate,Syborg.Razor.RazorEngineExecutionSettings)">
+      <requires csharp="innerTemplate != null" vb="innerTemplate &lt;&gt; Nothing">innerTemplate != null</requires>
+      <requires csharp="executionSettings != null" vb="executionSettings &lt;&gt; Nothing">executionSettings != null</requires>
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Razor.RazorTemplateBase.WriteLiteralTo(System.IO.TextWriter,System.Object)">
+      <requires csharp="writer != null" vb="writer &lt;&gt; Nothing">writer != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.RazorTemplateBase.WriteAttribute(System.String,System.Object[])">
+      <requires csharp="args != null" vb="args &lt;&gt; Nothing">args != null</requires>
+    </member>
+    <member name="M:Syborg.Razor.RazorTemplateBase.DefineSection(System.String,System.Action)">
+      <requires csharp="sectionName != null" vb="sectionName &lt;&gt; Nothing">sectionName != null</requires>
+    </member>
+    <member name="M:Syborg.WebContextExtensions.DumpRequestHeaders(Syborg.IWebContext)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.WebContextExtensions.ExtractFormData(Syborg.IWebContext)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.WebContextExtensions.ReadRequestPostString(Syborg.IWebContext)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+      <ensures csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="M:Syborg.Hosting.SyborgHttpListenerAppHost.#ctor(Syborg.IWebServerConfiguration,System.String,System.Int32,System.String,LibroLib.FileSystem.IFileSystem,LibroLib.FileSystem.IApplicationInfo,LibroLib.Misc.ITimeService,Syborg.Razor.IRazorViewRenderingEngine,Syborg.IFileMimeTypesMap,Syborg.IWebServerController,System.Collections.Generic.IEnumerable{Syborg.Routing.IWebRequestRoute},System.Collections.Generic.IEnumerable{Syborg.IWebPolicy})">
+      <requires csharp="viewRenderingEngine != null" vb="viewRenderingEngine &lt;&gt; Nothing">viewRenderingEngine != null</requires>
+      <requires csharp="routes != null" vb="routes &lt;&gt; Nothing">routes != null</requires>
+      <requires csharp="policies != null" vb="policies &lt;&gt; Nothing">policies != null</requires>
+    </member>
+    <member name="M:Syborg.Hosting.SyborgHttpModuleAppHost.AddRoute(Syborg.Routing.IWebRequestRoute)">
+      <requires csharp="route != null" vb="route &lt;&gt; Nothing">route != null</requires>
+    </member>
+    <member name="M:Syborg.Hosting.SyborgHttpModuleAppHost.AddRoutes(System.Collections.Generic.IEnumerable{Syborg.Routing.IWebRequestRoute})">
+      <requires csharp="routes != null" vb="routes &lt;&gt; Nothing">routes != null</requires>
+    </member>
+    <member name="M:Syborg.Hosting.SyborgHttpModuleAppHost.AddPolicies(System.Collections.Generic.IEnumerable{Syborg.IWebPolicy})">
+      <requires csharp="policies != null" vb="policies &lt;&gt; Nothing">policies != null</requires>
+    </member>
+    <member name="M:Syborg.Hosting.SyborgHttpModuleAppHost.CreateWebContext(System.Web.HttpContext)">
+      <requires csharp="httpContext != null" vb="httpContext &lt;&gt; Nothing">httpContext != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerWebContext.#ctor(System.Net.HttpListenerContext,System.String,System.String,LibroLib.FileSystem.IFileSystem,LibroLib.FileSystem.IApplicationInfo,LibroLib.Misc.ITimeService,Syborg.IWebServerConfiguration,Syborg.Razor.IRazorViewRenderingEngine,Syborg.IFileMimeTypesMap)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerWebContext.AddHeader(System.String,System.String)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AddHeader(System.String,System.String)" inheritedFromTypeName="IWebContext" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerWebContext.AddPolicy(Syborg.IWebPolicy)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AddPolicy(Syborg.IWebPolicy)" inheritedFromTypeName="IWebContext" csharp="policy != null" vb="policy &lt;&gt; Nothing">policy != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerWebContext.AppendCookie(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AppendCookie(Syborg.ICookie)" inheritedFromTypeName="IWebContext" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerWebContext.CreateCookie(System.String)">
+      <requires inheritedFrom="M:Syborg.IWebContext.CreateCookie(System.String)" inheritedFromTypeName="IWebContext" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpListenerWebContext.SetCookie(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.IWebContext.SetCookie(Syborg.ICookie)" inheritedFromTypeName="IWebContext" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.FileMimeTypesMap">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_FileMimeTypesMap" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.FileSystem">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_FileSystem" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.TimeService">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_TimeService" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.ApplicationUrl">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ApplicationUrl" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.Configuration">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Configuration" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.Url">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Url" inheritedFromTypeName="IWebContext" csharp="result != (System.Uri)null" vb="result &lt;&gt; ((System.Uri)Nothing) ">result != (System.Uri)null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.ViewRenderingEngine">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ViewRenderingEngine" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.RequestCookies">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestCookies" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.RequestHeaders">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestHeaders" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.RequestStream">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestStream" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.ResponseHeaders">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ResponseHeaders" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.HttpMethod">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_HttpMethod" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.Policies">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Policies" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.ResponseStream">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ResponseStream" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.QueryString">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_QueryString" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpListenerWebContext.RawUrl">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RawUrl" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="M:Syborg.IWebPolicy.Apply(Syborg.IWebContext)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.WebRequestRouteMatch.FromRegexMatch(System.Text.RegularExpressions.Regex,System.Text.RegularExpressions.Match)">
+      <requires csharp="pattern != null" vb="pattern &lt;&gt; Nothing">pattern != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.WebRequestRouteMatch.AddParameter(System.String,System.String)">
+      <requires csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.WebRequestRouteMatch.GetMandatoryParameter``1(System.String)">
+      <requires csharp="parameterName != null" vb="parameterName &lt;&gt; Nothing">parameterName != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.WebRequestRouteMatch.ToString">
+      <ensures inheritedFrom="M:System.Object.ToString" inheritedFromTypeName="Object" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+    </member>
+    <member name="P:Syborg.Routing.WebRequestRouteMatch.Item(System.String)">
+      <getter>
+        <requires csharp="parameterName != null" vb="parameterName &lt;&gt; Nothing">parameterName != null</requires>
+      </getter>
+    </member>
+    <member name="M:Syborg.Routing.RedirectToHttpsRoute.ProcessIfMatch(Syborg.IWebContext,Syborg.CommandResults.IWebCommandResult@)">
+      <requires inheritedFrom="M:Syborg.Routing.IWebRequestRoute.ProcessIfMatch(Syborg.IWebContext,Syborg.CommandResults.IWebCommandResult@)" inheritedFromTypeName="IWebRequestRoute" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.RegexWebRequestRoute.#ctor(System.String,Syborg.Routing.HttpMethod,Syborg.IWebCommand)">
+      <requires csharp="routeRegex != null" vb="routeRegex &lt;&gt; Nothing">routeRegex != null</requires>
+      <requires csharp="command != null" vb="command &lt;&gt; Nothing">command != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.RegexWebRequestRoute.#ctor(System.String,System.String,Syborg.IWebCommand)">
+      <requires csharp="routeRegex != null" vb="routeRegex &lt;&gt; Nothing">routeRegex != null</requires>
+      <requires csharp="command != null" vb="command &lt;&gt; Nothing">command != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.RegexWebRequestRoute.ProcessIfMatch(Syborg.IWebContext,Syborg.CommandResults.IWebCommandResult@)">
+      <requires inheritedFrom="M:Syborg.Routing.IWebRequestRoute.ProcessIfMatch(Syborg.IWebContext,Syborg.CommandResults.IWebCommandResult@)" inheritedFromTypeName="IWebRequestRoute" csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.Routing.IWebRequestRoute.ProcessIfMatch(Syborg.IWebContext,Syborg.CommandResults.IWebCommandResult@)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleWebContext.#ctor(System.Web.HttpContext,LibroLib.FileSystem.IFileSystem,LibroLib.FileSystem.IApplicationInfo,LibroLib.Misc.ITimeService,Syborg.IWebServerConfiguration,Syborg.Razor.IRazorViewRenderingEngine,Syborg.IFileMimeTypesMap)">
+      <requires csharp="context != null" vb="context &lt;&gt; Nothing">context != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleWebContext.AddHeader(System.String,System.String)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AddHeader(System.String,System.String)" inheritedFromTypeName="IWebContext" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleWebContext.AddPolicy(Syborg.IWebPolicy)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AddPolicy(Syborg.IWebPolicy)" inheritedFromTypeName="IWebContext" csharp="policy != null" vb="policy &lt;&gt; Nothing">policy != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleWebContext.AppendCookie(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.IWebContext.AppendCookie(Syborg.ICookie)" inheritedFromTypeName="IWebContext" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleWebContext.CreateCookie(System.String)">
+      <requires inheritedFrom="M:Syborg.IWebContext.CreateCookie(System.String)" inheritedFromTypeName="IWebContext" csharp="name != null" vb="name &lt;&gt; Nothing">name != null</requires>
+    </member>
+    <member name="M:Syborg.HttpModuleWebContext.SetCookie(Syborg.ICookie)">
+      <requires inheritedFrom="M:Syborg.IWebContext.SetCookie(Syborg.ICookie)" inheritedFromTypeName="IWebContext" csharp="cookie != null" vb="cookie &lt;&gt; Nothing">cookie != null</requires>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.ApplicationUrl">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ApplicationUrl" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.Configuration">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Configuration" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.FileMimeTypesMap">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_FileMimeTypesMap" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.FileSystem">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_FileSystem" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.TimeService">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_TimeService" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.HttpMethod">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_HttpMethod" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.Policies">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Policies" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.ResponseStream">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ResponseStream" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.QueryString">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_QueryString" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.RawUrl">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RawUrl" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.RequestCookies">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestCookies" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.RequestHeaders">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestHeaders" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.RequestStream">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_RequestStream" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.ResponseHeaders">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ResponseHeaders" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.Url">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_Url" inheritedFromTypeName="IWebContext" csharp="result != (System.Uri)null" vb="result &lt;&gt; ((System.Uri)Nothing) ">result != (System.Uri)null</ensures>
+      </getter>
+    </member>
+    <member name="P:Syborg.HttpModuleWebContext.ViewRenderingEngine">
+      <getter>
+        <ensures inheritedFrom="M:Syborg.IWebContext.get_ViewRenderingEngine" inheritedFromTypeName="IWebContext" csharp="result != null" vb="result &lt;&gt; Nothing">result != null</ensures>
+      </getter>
+    </member>
+  </members>
+</doc>

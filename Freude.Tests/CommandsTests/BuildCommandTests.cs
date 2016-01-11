@@ -1,11 +1,11 @@
 ﻿using System.IO;
 using System.Text;
-using Brejc.Common.Console;
-using Brejc.Common.FileSystem;
 using Freude.Commands;
 using Freude.Parsing;
 using Freude.ProjectServices;
 using Freude.Templating;
+using LibroLib.ConsoleShells;
+using LibroLib.FileSystem;
 using NUnit.Framework;
 using Rhino.Mocks;
 using Syborg.Razor;

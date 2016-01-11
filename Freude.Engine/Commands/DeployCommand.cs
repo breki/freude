@@ -2,11 +2,9 @@
 using System.Globalization;
 using System.Net;
 using System.Reflection;
-using Brejc.Common.Console;
-using Brejc.Common.FileSystem;
-using Brejc.Common.Ftp;
-using Freude.DocModel;
 using Freude.ProjectServices;
+using LibroLib.ConsoleShells;
+using LibroLib.FileSystem;
 using log4net;
 
 namespace Freude.Commands

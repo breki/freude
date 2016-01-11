@@ -1,7 +1,6 @@
 ﻿using System.IO;
-using Brejc.Common.FileSystem;
-using Freude.DocModel;
 using Freude.ProjectServices;
+using LibroLib.FileSystem;
 using NUnit.Framework;
 using Rhino.Mocks;
 

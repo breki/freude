@@ -3,12 +3,12 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using Brejc.Common.Console;
-using Brejc.Common.FileSystem;
 using Freude.DocModel;
 using Freude.Parsing;
 using Freude.ProjectServices;
 using Freude.Templating;
+using LibroLib.ConsoleShells;
+using LibroLib.FileSystem;
 using log4net;
 using Syborg.Razor;
 

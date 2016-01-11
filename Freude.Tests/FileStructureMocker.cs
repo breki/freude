@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
-using Brejc.Common.DataStructures;
-using Brejc.Common.FileSystem;
+using LibroLib.DataStructures;
+using LibroLib.FileSystem;
 using Rhino.Mocks;
 
 namespace Freude.Tests

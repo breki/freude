@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
-using Brejc.Common.Console;
-using Brejc.Common.FileSystem;
-using Brejc.Common.Ftp;
 using Freude.Commands;
 using Freude.Parsing;
 using Freude.ProjectServices;
 using Freude.Templating;
+using LibroLib.ConsoleShells;
+using LibroLib.FileSystem;
 using log4net;
 using log4net.Config;
 using Syborg.Razor;
@@ -27,9 +26,9 @@ namespace Freude
             IRazorCompiler razorCompiler = new InMemoryRazorCompiler ();
 
             IFileSystem fileSystem = new WindowsFileSystem ();
-            IFtpChannelFactory ftpChannelFactory = new FtpChannelFactoryUsingSockets ();
-            IFtpCommunicator ftpCommunicator = new FtpCommunicator ();
-            IFtpSessionFactory ftpSessionFactory = new FtpSessionFactory(ftpChannelFactory, ftpCommunicator, fileSystem);
+            //IFtpChannelFactory ftpChannelFactory = new FtpChannelFactoryUsingSockets ();
+            //IFtpCommunicator ftpCommunicator = new FtpCommunicator ();
+            //IFtpSessionFactory ftpSessionFactory = new FtpSessionFactory(ftpChannelFactory, ftpCommunicator, fileSystem);
             IFreudeTemplatingEngine freudeTemplatingEngine = new FreudeTemplatingEngine (razorCompiler);
             IWikiTextTokenizer wikiTextTokenizer = new WikiTextTokenizer();
             IFreudeTextParser freudeTextParser = new FreudeTextParser (wikiTextTokenizer);
@@ -37,7 +36,7 @@ namespace Freude
 
             ConsoleShell consoleShell = new ConsoleShell ("Freude.Engine.exe");
             consoleShell.RegisterCommand (new BuildCommand (fileSystem, projectBuilder, freudeTextParser, freudeTemplatingEngine));
-            consoleShell.RegisterCommand (new DeployCommand(projectBuilder, ftpSessionFactory));
+            //consoleShell.RegisterCommand (new DeployCommand(projectBuilder, ftpSessionFactory));
 
             try
             {
