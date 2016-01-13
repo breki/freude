@@ -7,7 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Build.bat = Build.bat
 		CodeAnalysisRules.ruleset = CodeAnalysisRules.ruleset
-		CustomDictionary.xml = CustomDictionary.xml
 		Freude.ProjectVersion.txt = Freude.ProjectVersion.txt
 		todo.txt = todo.txt
 	EndProjectSection

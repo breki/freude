@@ -5,6 +5,7 @@ using System.IO;
 using Flubu;
 using Flubu.Builds;
 using Flubu.Builds.Tasks.AnalysisTasks;
+using Flubu.Builds.Tasks.NuGetTasks;
 using Flubu.Builds.Tasks.TestingTasks;
 using Flubu.Targeting;
 
@@ -27,6 +28,10 @@ namespace BuildScripts
                 .SetDescription("Builds the product, packages it, deploys and tests it on a local instance")
                 .DependsOn("compile", "dupfinder", "tests").SetAsDefault();
 
+            targetTree.AddTarget ("release")
+                .SetDescription ("Builds the library, runs tests on it and publishes it on the NuGet server")
+                .DependsOn ("rebuild", "nuget");
+
             targetTree.GetTarget("fetch.build.version").Do(TargetFetchBuildVersion);
             
             targetTree.AddTarget("tests")
@@ -34,6 +39,13 @@ namespace BuildScripts
             
             targetTree.AddTarget("dupfinder")
                 .SetDescription("Runs R# dupfinder to find code duplicates").Do(TargetDupFinder);
+
+            targetTree.AddTarget ("nuget")
+                .SetDescription ("Produces NuGet packages for the library and publishes them to the NuGet server")
+                .Do (c =>
+                {
+                    TargetNuGet (c, "Freude");
+                }).DependsOn ("fetch.build.version");
         }
 
         private static void ConfigureBuildProperties(TaskSession session)
@@ -44,9 +56,7 @@ namespace BuildScripts
             session.Properties.Set(BuildProps.ProductName, "Freude");
             session.Properties.Set(BuildProps.SolutionFileName, "Freude.sln");
             session.Properties.Set(BuildProps.TargetDotNetVersion, FlubuEnvironment.Net40VersionNumber);
-            session.Properties.Set(BuildProps.ToolsVersion, FlubuEnvironment.Net40VersionNumber);
             session.Properties.Set(BuildProps.VersionControlSystem, VersionControlSystem.Mercurial);
-            session.Properties.Set(BuildProps.FxcopDir, "Microsoft Fxcop 10.0");
         }
 
         private static void TargetFetchBuildVersion (ITaskContext context)
@@ -75,6 +85,17 @@ namespace BuildScripts
         {
             RunDupFinderAnalysisTask task = new RunDupFinderAnalysisTask();
             task.Execute(context);
+        }
+
+        private static void TargetNuGet (ITaskContext context, string projectName)
+        {
+            string nuspecFileName = Path.Combine (projectName, projectName) + ".nuspec";
+
+            PublishNuGetPackageTask publishTask = new PublishNuGetPackageTask (
+                projectName, nuspecFileName);
+            publishTask.BasePath = Path.GetFullPath (projectName);
+            publishTask.ForApiKeyUseEnvironmentVariable ();
+            publishTask.Execute (context);
         }
     }
 }

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Dictionary>
+  <Words>
+    <Unrecognized>
+      <Word>cb</Word>
+      <Word>El</Word>
+    </Unrecognized>
+    <Recognized>
+      <!--<Word>a</Word>-->
+    </Recognized>
+    <Deprecated>
+      <!-- Be sure to pascal-case deprecated terms and preferred alternates     -->
+      <!-- Note that terms consisting of one or two tokens only will be flagged -->
+      <!-- eg, ComPlus can be checked for but NewComPlus will not be detected   -->
+      <Term PreferredAlternate="EnterpriseServices">ComPlus</Term>
+    </Deprecated>
+    <Inappropriate />
+    <Compound>
+      <Term CompoundAlternate="WebServer">Webserver</Term>
+    </Compound>
+  </Words>
+  <Acronyms>
+    <CasingExceptions>
+      <Acronym>El</Acronym>
+      <!--<Acronym>IoC</Acronym>-->
+    </CasingExceptions>
+  </Acronyms>
+</Dictionary>
