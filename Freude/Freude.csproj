@@ -128,6 +128,7 @@
     <CodeContractsAnalysisWarningLevel>2</CodeContractsAnalysisWarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>1591</NoWarn>
+    <DocumentationFile>bin\Release\Freude.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />

@@ -20,10 +20,10 @@
     </references>
   </metadata>
   <files>
-    <file src="bin\Freude.dll" target="lib\net40" />
-    <file src="bin\Freude.pdb" target="lib\net40" />
-    <file src="bin\Freude.xml" target="lib\net40" />
-    <file src="bin\CodeContracts\Freude.Contracts.dll" target="lib\net40" />
-    <file src="bin\CodeContracts\Freude.Contracts.pdb" target="lib\net40" />
+    <file src="bin\Release\Freude.dll" target="lib\net40" />
+    <file src="bin\Release\Freude.pdb" target="lib\net40" />
+    <file src="bin\Release\Freude.xml" target="lib\net40" />
+    <file src="bin\Release\CodeContracts\Freude.Contracts.dll" target="lib\net40" />
+    <file src="bin\Release\CodeContracts\Freude.Contracts.pdb" target="lib\net40" />
   </files>
 </package>
