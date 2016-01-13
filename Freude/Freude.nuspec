@@ -1,0 +1,29 @@
+﻿<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Freude</id>
+    <version>$version$</version>
+    <authors>Igor Brejc</authors>
+    <projectUrl>https://bitbucket.org/breki-os/Freude</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Engine for parsing wikitext/markdown text into a document model which can then be used for generating
+    various types of documentation (HTML, PDF, etc.).</description>
+    <copyright>Copyright 2015-2016 Igor Brejc</copyright>
+    <tags>wikitext markdown parser</tags>
+    <frameworkAssemblies>
+    </frameworkAssemblies>
+
+    <references>
+      <group>
+        <reference file="Freude.dll" />
+      </group>
+    </references>
+  </metadata>
+  <files>
+    <file src="bin\Freude.dll" target="lib\net40" />
+    <file src="bin\Freude.pdb" target="lib\net40" />
+    <file src="bin\Freude.xml" target="lib\net40" />
+    <file src="bin\CodeContracts\Freude.Contracts.dll" target="lib\net40" />
+    <file src="bin\CodeContracts\Freude.Contracts.pdb" target="lib\net40" />
+  </files>
+</package>
